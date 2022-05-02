@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="//cdn.jsdelivr.net/npm/pouchdb@7.3.0/dist/pouchdb.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <input id="input" placeholder="Enter note" />
+    <button onclick="addNote()">Add note</button>
+
+    <ul id="notes"></ul>
+    <script>
+    // Check that service workers are supported
+    if ('serviceWorker' in navigator) {
+        // Use the window load event to keep the page load performant
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js');
+        });
+    }
+    var db = new PouchDB('notes');
+
+    function addNote() {
+        const note = {
+            "_id": new Date().toJSON(),
+            "value": document.getElementById('input').value
+        }
+        db.put(note);
+        document.getElementById('input').value = '';
+        listNotes();
+    }
+
+    function listNotes(notes) {
+        document.getElementById('notes').innerHTML = '';
+        db.allDocs({
+            include_docs: true
+        }).then(function (result) {
+            result.rows.reverse().forEach(note => {
+                const li = document.createElement('li')
+                li.append(note.doc.value);
+                document.getElementById('notes').append(li);
+            });
+        }).catch(function (err) {
+            console.log(err);
+        });
+    }
+
+    listNotes();
+    </script>
+</body>
+</html>
